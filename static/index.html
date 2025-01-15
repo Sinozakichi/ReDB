@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡片管理</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        .edit-row {
+            background-color: #ffffcc; /* 高亮顯示編輯狀態 */
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<h1>卡片管理</h1>
+
+<!-- 新增卡片按鈕 -->
+<button id="addCardButton">新增卡片</button>
+
+<!-- 表格顯示卡片資料 -->
+<table id="cardTable">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>名稱</th>
+            <th>等級</th>
+            <th>屬性</th>
+            <th>種族</th>
+            <th>攻擊力</th>
+            <th>防禦力</th>
+            <th>效果</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- 卡片資料將顯示在這裡 -->
+    </tbody>
+</table>
+
+<!-- 新增卡片的小視窗 -->
+<div id="addCardModal" class="hidden">
+    <h2>新增卡片</h2>
+    <label>名稱: <input id="addName" type="text"></label><br>
+    <label>等級: <input id="addLevel" type="number"></label><br>
+    <label>屬性: <input id="addAttribute" type="text"></label><br>
+    <label>種族: <input id="addRace" type="text"></label><br>
+    <label>攻擊力: <input id="addAttack" type="number"></label><br>
+    <label>防禦力: <input id="addDefense" type="number"></label><br>
+    <label>效果: <textarea id="addEffect"></textarea></label><br>
+    <button onclick="confirmAddCard()">確定</button>
+    <button onclick="closeAddCardModal()">取消</button>
+</div>
+
+<script>
+// 從後端獲取卡片資料
+const url="http://localhost:5500/cards";
+
+// GET(SELECT)
+// 簡單方法
+function fetchCards() {
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.querySelector('#cardTable tbody');
+            tableBody.innerHTML = '';
+            data.forEach(card => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${card.id}</td>
+                    <td>${card.name}</td>
+                    <td>${card.level}</td>
+                    <td>${card.attribute}</td>
+                    <td>${card.race}</td>
+                    <td>${card.attack}</td>
+                    <td>${card.defense}</td>
+                    <td>${card.effect}</td>
+                    <td>
+                        <button onclick="deleteCard(${card.id})">刪除</button>
+                        <button onclick="startEditCard(this, ${card.id})">修改</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        });
+}
+
+// 刪除卡片
+// DELETE(DELETE)
+// 非簡單方法
+function deleteCard(id) {
+    if (confirm('確定要刪除此卡片嗎？')) {
+        const deletecards = {
+            id
+        };
+        fetch(url,{
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(deletecards),
+        }).then(() => fetchCards());
+    }
+}
+
+// 編輯卡片
+function startEditCard(button, id) {
+    const row = button.parentElement.parentElement;
+    row.classList.add('edit-row');
+    
+    const cells = row.querySelectorAll('td');
+    for (let i = 1; i < cells.length - 1; i++) {
+        const originalValue = cells[i].textContent;
+        cells[i].innerHTML = `<input type="text" value="${originalValue}">`;
+    }
+    
+    button.textContent = '確定';
+    button.setAttribute('onclick', `confirmEditCard(this, ${id})`);
+    const cancelButton = document.createElement('button');
+    cancelButton.textContent = '取消';
+    cancelButton.onclick = () => cancelEditCard(row, id);
+    button.parentElement.appendChild(cancelButton);
+}
+
+// 確認編輯
+// PUT(UPDATE)
+// 非簡單方法
+function confirmEditCard(button, id) {
+    if (confirm('確定要修改此卡片嗎？')) {
+        const row = button.parentElement.parentElement;
+        const inputs = row.querySelectorAll('input');
+        const updatedCard = {
+            id,
+            name: inputs[0].value,
+            level: parseInt(inputs[1].value),
+            attribute: inputs[2].value,
+            race: inputs[3].value,
+            attack: parseInt(inputs[4].value),
+            defense: parseInt(inputs[5].value),
+            effect: inputs[6].value,
+        };
+
+        fetch(url, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedCard),
+        }).then(() => fetchCards());
+    }
+}
+
+// 取消編輯
+function cancelEditCard(row, id) {
+    row.classList.remove('edit-row');
+    fetchCards(); // 恢復表格
+}
+
+// 打開新增卡片的視窗
+document.getElementById('addCardButton').onclick = () => {
+    document.getElementById('addCardModal').classList.remove('hidden');
+};
+
+// 關閉新增卡片的視窗
+function closeAddCardModal() {
+    document.getElementById('addCardModal').classList.add('hidden');
+}
+
+// 確認新增卡片
+// POST(INSERT)
+// 由於有Content-Type: application/json這種自定義請求頭，所以屬非簡單方法
+function confirmAddCard() {
+    if (confirm('確定要新增此卡片嗎？')) {
+        const newCard = {
+            name: document.getElementById('addName').value,
+            level: parseInt(document.getElementById('addLevel').value),
+            attribute: document.getElementById('addAttribute').value,
+            race: document.getElementById('addRace').value,
+            attack: parseInt(document.getElementById('addAttack').value),
+            defense: parseInt(document.getElementById('addDefense').value),
+            effect: document.getElementById('addEffect').value,
+        };
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newCard),
+        }).then(() => {
+            closeAddCardModal();
+            fetchCards();
+        });
+    }
+}
+
+// 頁面載入時加載卡片資料
+window.onload = fetchCards;
+</script>
+
+</body>
+</html>
