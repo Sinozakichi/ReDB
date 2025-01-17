@@ -34,8 +34,8 @@ func main() {
 
 	// STEP1.初始化資料庫
 	//db, err := NewSQLiteDatabase("./test.db") //SQLite
-	//db, err := NewMySQLDatabase("root", "Eo@e368619220", "localhost:3306", "go_redb") //MySQL(Local)
-	db, err := NewMySQLDatabase("test", "test", "61.219.144.12:3306", "go_redb") //MySQL(Remote)
+	db, err := NewMySQLDatabase("root", "Eo@e368619220", "localhost:3306", "go_redb") //MySQL(Local)
+	//db, err := NewMySQLDatabase("test", "test", "61.219.144.12:3306", "go_redb") //MySQL(Remote)
 	if err != nil {
 		panic(err)
 	}

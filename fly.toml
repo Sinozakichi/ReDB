@@ -1,0 +1,27 @@
+# fly.toml app configuration file generated for redb on 2025-01-16T15:33:52+08:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'redb'
+primary_region = 'nrt'
+
+[build]
+  [build.args]
+    GO_VERSION = '1.23.3'
+
+[env]
+  PORT = '8080'
+
+[http_service]
+  internal_port = 5500
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
