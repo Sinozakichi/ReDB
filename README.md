@@ -1,2 +1,2 @@
 # ReDB
-Go_ReDB_Practice(SQLite、MySQL、PostgreSQL)
+Go_ReDB_Practice(SQLite、MySQL、PostgreSQL、Redis)
