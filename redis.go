@@ -88,10 +88,10 @@ func HandleCardsRequestToRedis(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// 整理 Redis 中撈取的資料與傳入的資料
+// card為要異動的卡片的資料
+// cards為所有卡片的資料
 func parseRedisDataToObject(w http.ResponseWriter, r *http.Request, cardsJSON string) (Card, []Card, error) {
-	// 整理 Redis 中撈取的資料與傳入的資料
-	// card為要異動的卡片的資料
-	// cards為所有卡片的資料
 	var card Card
 	var cards []Card
 	if err := json.NewDecoder(r.Body).Decode(&card); err != nil {
@@ -107,6 +107,7 @@ func parseRedisDataToObject(w http.ResponseWriter, r *http.Request, cardsJSON st
 	return card, cards, nil
 }
 
+// CRUD操作後將資料塞回Redis
 func updateRedis(ctx context.Context, tablename string, cards []Card, w http.ResponseWriter) error {
 	updatedCardsJSON, err := json.Marshal(cards)
 	if err != nil {
