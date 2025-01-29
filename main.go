@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/redis/go-redis/v9"
 )
 
 // Card 表示 cards 表中的一條記錄
@@ -30,16 +33,22 @@ type Database interface {
 	DeleteCard(id int) error
 }
 
+// Redis 客戶端
+var redisClient *redis.Client
+var ctx = context.Background()
+
 func main() {
 
 	// STEP1.初始化資料庫
 	//db, err := NewSQLiteDatabase("./test.db") //SQLite
 	db, err := NewMySQLDatabase("root", "Eo@e368619220", "localhost:3306", "go_redb") //MySQL(Local)
 	//db, err := NewMySQLDatabase("test", "test", "123.192.158.69:3306", "go_redb") //MySQL(Remote)
+	initRedis() // Redis
 	if err != nil {
 		panic(err)
 	}
 	defer db.Close()
+	defer redisClient.Close() // 結束時關閉 Redis 連線
 
 	// 建立表格
 	// err = db.CreateTable()
@@ -89,7 +98,8 @@ func main() {
 			w.WriteHeader(http.StatusNoContent) // 回應成功的204狀態碼
 			return
 		}
-		HandleCardsRequest(db, w, r)
+		//HandleCardsRequest(db, w, r) //MySQL
+		HandleCardsRequestToRedis(w, r) //Redis
 	})
 
 	fmt.Println("Server is running on port 5500...")
