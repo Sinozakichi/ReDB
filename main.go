@@ -41,14 +41,14 @@ func main() {
 
 	// STEP1.初始化資料庫
 	//db, err := NewSQLiteDatabase("./test.db") //SQLite
-	db, err := NewMySQLDatabase("root", "Eo@e368619220", "localhost:3306", "go_redb") //MySQL(Local)
-	//db, err := NewMySQLDatabase("test", "test", "123.192.158.69:3306", "go_redb") //MySQL(Remote)
-	initRedis() // Redis
+	//db, err := NewMySQLDatabase("root", "Eo@e368619220", "localhost:3306", "go_redb") //MySQL(Local)
+	db, err := NewMySQLDatabase("admin", "368619220", "goredb.c56w6gysyuw7.us-east-1.rds.amazonaws.com:3306", "go_redb") //MySQL(AWS)
+	//initRedis()                                                                                                          // Redis
 	if err != nil {
 		panic(err)
 	}
 	defer db.Close()
-	defer redisClient.Close() // 結束時關閉 Redis 連線
+	//defer redisClient.Close() // 結束時關閉 Redis 連線
 
 	// 建立表格
 	// err = db.CreateTable()
@@ -83,6 +83,10 @@ func main() {
 			card.ID, card.Name, card.Level, card.Attribute, card.Race, card.Attack, card.Defense, card.Effect)
 	}
 
+	// 設定靜態文件伺服器，將靜態資源映射到 /static/ 路徑
+	fs := http.FileServer(http.Dir("/app/static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
 	// STEP3.啟動 HTTP 伺服器
 	// 只能處理"/cards"路徑的請求，無法向下兼容如"/cards/id"等的請求
 	http.HandleFunc("/cards", func(w http.ResponseWriter, r *http.Request) {
@@ -98,8 +102,8 @@ func main() {
 			w.WriteHeader(http.StatusNoContent) // 回應成功的204狀態碼
 			return
 		}
-		//HandleCardsRequest(db, w, r) //MySQL
-		HandleCardsRequestToRedis(w, r) //Redis
+		HandleCardsRequest(db, w, r) //MySQL
+		//HandleCardsRequestToRedis(w, r) //Redis
 	})
 
 	fmt.Println("Server is running on port 5500...")
