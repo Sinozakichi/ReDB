@@ -83,9 +83,9 @@ func main() {
 			card.ID, card.Name, card.Level, card.Attribute, card.Race, card.Attack, card.Defense, card.Effect)
 	}
 
-	// 設定靜態文件伺服器，將靜態資源映射到 /static/ 路徑
-	fs := http.FileServer(http.Dir("/app/static"))
-	http.Handle("/static/", http.StripPrefix("/static/", fs))
+	// 設定靜態文件伺服器
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/", fs)
 
 	// STEP3.啟動 HTTP 伺服器
 	// 只能處理"/cards"路徑的請求，無法向下兼容如"/cards/id"等的請求
